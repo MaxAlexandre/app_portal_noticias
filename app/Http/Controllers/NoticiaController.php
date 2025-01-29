@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\noticia;
 use App\Http\Requests\StorenoticiaRequest;
 use App\Http\Requests\UpdatenoticiaRequest;
+use Illuminate\Support\Facades\Cache;
 
 class NoticiaController extends Controller
 {
@@ -15,7 +16,31 @@ class NoticiaController extends Controller
      */
     public function index()
     {
-        //
+
+        //Criar um dado dentro do BD Redis
+        //Cache::put('site','max.alexxandre.net.br',10);
+        //chave, valor, tempo em segundos para expirar o dado em memória
+
+        //recuperar um dado dentro do bd Redis
+        //$site = Cache::get('site');
+        //echo $site;
+
+        $noticias = [];
+
+        /*
+        if (Cache::has('dez_primeiras_noticias')) {
+            $noticias = Cache::get('dez_primeiras_noticias');
+        } else {
+            $noticias = Noticia::orderByDesc('created_at')->limit(10)->get();
+            Cache::put('dez_primeiras_noticias', $noticias, 15);
+        }
+        */
+
+        $noticias = Cache::remember('dez_primeiras_noticias', 15, function () {
+            return Noticia::orderByDesc('created_at')->limit(10)->get();
+        });
+
+        return view('noticia', ['noticias' => $noticias]);
     }
 
     /**
@@ -31,7 +56,7 @@ class NoticiaController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \App\Http\Requests\StorenoticiaRequest  $request
+     * @param \App\Http\Requests\StorenoticiaRequest $request
      * @return \Illuminate\Http\Response
      */
     public function store(StorenoticiaRequest $request)
@@ -42,7 +67,7 @@ class NoticiaController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\noticia  $noticia
+     * @param \App\Models\noticia $noticia
      * @return \Illuminate\Http\Response
      */
     public function show(noticia $noticia)
@@ -53,7 +78,7 @@ class NoticiaController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\noticia  $noticia
+     * @param \App\Models\noticia $noticia
      * @return \Illuminate\Http\Response
      */
     public function edit(noticia $noticia)
@@ -64,8 +89,8 @@ class NoticiaController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \App\Http\Requests\UpdatenoticiaRequest  $request
-     * @param  \App\Models\noticia  $noticia
+     * @param \App\Http\Requests\UpdatenoticiaRequest $request
+     * @param \App\Models\noticia $noticia
      * @return \Illuminate\Http\Response
      */
     public function update(UpdatenoticiaRequest $request, noticia $noticia)
@@ -76,7 +101,7 @@ class NoticiaController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\noticia  $noticia
+     * @param \App\Models\noticia $noticia
      * @return \Illuminate\Http\Response
      */
     public function destroy(noticia $noticia)
